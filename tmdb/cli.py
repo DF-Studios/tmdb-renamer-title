@@ -8,7 +8,6 @@ from .src.tmdb_api import TMDB
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
-
 @click.group(context_settings=CONTEXT_SETTINGS)
 def cli():
     """Rename Episodes Using the TMDB Database."""
@@ -34,7 +33,9 @@ def cli():
 )
 def tv(url, dir):
     try:
-        tv = TMDB().get_tv(tv_url=url)
+        # Create TMDB Instance for API in more than one place
+        tmdb_instance = TMDB()
+        tv = tmdb_instance.get_tv(tv_url=url)
         # TMDB Data Processing
         tv_name = tv["name"].replace(" ", ".").replace("-", ".").replace(":", "")
         tv_seasons = tv["seasons"]
@@ -111,13 +112,19 @@ def tv(url, dir):
         for episode_number, file_name in zip(episode_numbers, file_names):
             # Add Season Number to Episode Name
             file_ext = os.path.splitext(file_name)[1]
-            episode_name = f"{season_name}.E{episode_number:02d}{file_ext}"
-            # Clean Episode Name
+            # Get Episode Title from TMDB
+            episode_title = tmdb_instance.get_episode_title(url, season_number, episode_number)
+            # Clean Episode Title
             badchars = '\\/:*?"<>|'
+            for char in badchars:
+                episode_title = episode_title.replace(char, "")
+            episode_name = f"{season_name}.E{episode_number:02d} - {episode_title}{file_ext}"
+            # Clean Episode Name
             for char in badchars:
                 episode_name = episode_name.replace(char, "")
             new_file_names.append(episode_name)
             print(f"{file_name} → {episode_name}")
+
         # Rename Files
         if click.confirm(f"→ Do you want to rename the files?", default=True):
             renamed_counts = 0
@@ -150,4 +157,3 @@ cli.add_command(tv)
 
 if __name__ == "__main__":
     cli()
-
