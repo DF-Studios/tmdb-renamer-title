@@ -42,4 +42,18 @@ class TMDB:
         # Parse URL
         tv_urlparse = urlparse(tv_url)
         tv_api_url = f"{self.api_url}{tv_urlparse.path}?api_key={self.api_key}&language={self.language}"
+        print(tv_api_url)
         return HTTP(tv_api_url).get_data()
+    
+    # TV Episode
+    def get_episode_title(self, tv_url: str, season_number: int, episode_number: int) -> str:
+        """Get Episode Title from TMDB"""
+        from urllib.parse import urlparse
+        tv_urlparse = urlparse(tv_url)
+        episode_api_url = (
+            f"{self.api_url}{tv_urlparse.path}/season/{season_number}/episode/{episode_number}"
+            f"?api_key={self.api_key}&language={self.language}"
+        )
+        data = HTTP(episode_api_url).get_data()
+        print(data.get("name", "") if data else "")
+        return data.get("name", "") if data else ""
